@@ -6,7 +6,12 @@ import WordStrength from "./WordStrength";
 import AddIcon from '@mui/icons-material/Add';
 import './AddProduct.css'
 
+import { db } from "../../FirebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
+
 const AddProduct = () => {
+    const collectionRef = collection(db, "Inventory");
+    
 
     const [productName, setProductName] = useState('');
     const [productNameIsTouched, setProductNameIsTouched] = useState(false);
@@ -17,14 +22,18 @@ const AddProduct = () => {
     const [allTags, setAllTags] = useState([]);
     const [tagErrMsg, setTagErrMsg] = useState('');
     const [selCategories, setSelCategories] = useState([]);
+    const [price, setPrice] = useState(0);
+    const [quantity, setQuantity] = useState(0);
+    const [image, setImage] = useState(null);
 
     const Categories = [
         "Electronics",
         "Fashion",
-        "Cleaning Accessories",
+        "Furniture",
         "Daily Use",
         "Medicines",
-        "Snacks"
+        "Snacks",
+        "Home Decor"
     ]
 
     const checkProductNameIsValid = (name) => {
@@ -83,6 +92,18 @@ const AddProduct = () => {
 
     const handleCategoryChange = (event) => {
         setSelCategories(event.target.value);
+    }
+
+    const createitem = async () => {
+        await addDoc(collectionRef, {
+            name: productName,
+            description: productDesc,
+            category: selCategories,
+            tag: allTags,
+            image: "Building",
+            quantity: quantity,
+            price: price}
+        );
     }
 
     return (
