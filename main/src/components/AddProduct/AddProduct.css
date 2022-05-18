@@ -3,6 +3,13 @@
     appearance: none;
 }
 
+.productName-strength-meter-progress {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 250px;
+    height: 8px;
+  }
+
 .productName-strength-meter-progress::-webkit-progress-bar {
     background-color: #eee;
     border-radius: 3px;

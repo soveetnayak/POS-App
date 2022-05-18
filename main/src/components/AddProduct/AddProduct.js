@@ -1,51 +1,41 @@
-import { Container, TextField, Typography } from "@mui/material";
-import { Grid } from "@mui/material";
+import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography } from "@mui/material";
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from "@mui/system";
 import { useState } from "react";
+import WordStrength from "./WordStrength";
+import AddIcon from '@mui/icons-material/Add';
 import './AddProduct.css'
-
-const getProductNameStrength = (name) => {
-    if (name === '')
-        return 0;
-    let size = name.trim().split(' ').length;
-    return size;
-}
-
-const getStrengthLabel = (value) => {
-
-    switch (value) {
-        case 1:
-            return 'Weak';
-        case 2:
-            return 'Fair';
-        case 3:
-            return 'Good';
-        case 4:
-            return 'Strong';
-        default:
-            return 'Weak';
-    }
-
-}
 
 const AddProduct = () => {
 
     const [productName, setProductName] = useState('');
     const [productNameIsTouched, setProductNameIsTouched] = useState(false);
     const [errMessage, setErrMessage] = useState('');
-    const [showError, setShowError] = useState(false);
+    const [productNameIsValid, setProductNameIsValid] = useState(false);
     const [productDesc, setProductDesc] = useState('');
+    const [curTag, setCurTag] = useState('');
+    const [allTags, setAllTags] = useState([]);
+    const [tagErrMsg, setTagErrMsg] = useState('');
+    const [selCategories, setSelCategories] = useState([]);
+
+    const Categories = [
+        "Electronics",
+        "Fashion",
+        "Cleaning Accessories",
+        "Daily Use",
+        "Medicines",
+        "Snacks"
+    ]
 
     const checkProductNameIsValid = (name) => {
         setProductNameIsTouched(true);
         if (name.trim() !== '' &&
             name.trim().split(' ').length <= 4
         ) {
-            setShowError(false);
+            setProductNameIsValid(false);
         }
         else {
-            setShowError(true);
+            setProductNameIsValid(true);
             if (name.trim(' ') === '') {
                 setErrMessage("Product Name cannot be empty");
             }
@@ -64,6 +54,35 @@ const AddProduct = () => {
 
     const onChangeProductDesc = (event) => {
         setProductDesc(event.target.value);
+    }
+
+
+    const onChangeCurTag = (event) => {
+        setCurTag(event.target.value);
+        if (tagErrMsg != '' && event.target.value != '') {
+            setTagErrMsg('');
+        }
+    }
+
+    const handleAddTag = () => {
+        if (curTag == '') {
+            setTagErrMsg("Please provide a tag to add");
+            return;
+        }
+        const temp = allTags;
+        temp.push(curTag);
+        setAllTags([...temp]);
+        setCurTag('');
+    }
+
+    const handleTagDelete = (tag) => {
+        const temp = allTags;
+        temp.splice(temp.indexOf(tag), 1);
+        setAllTags([...temp]);
+    }
+
+    const handleCategoryChange = (event) => {
+        setSelCategories(event.target.value);
     }
 
     return (
@@ -91,44 +110,116 @@ const AddProduct = () => {
                         value={productName}
                         onChange={onChangeProductName}
                         onBlur={() => { checkProductNameIsValid(productName) }}
-                        error={showError}
+                        error={productNameIsValid}
                         margin="normal"
                     >
                     </TextField>
-                    {showError && <Typography
+                    {productNameIsValid && <Typography
                         color="red"
                         variant="body1"
                     >{errMessage}</Typography>}
-                    {!showError && productName !== '' &&
-                        <>
-                            <progress
-                                value={getProductNameStrength(productName)}
-                                max="4"
-                                className={`productName-strength-meter-progress strength-${getStrengthLabel(getProductNameStrength(productName))}`}
-                                style={{ width: "100%" }}
-                            />
-                            <Typography
-                                variant="body1"
-                            >
-                                Word Strength: {getStrengthLabel(getProductNameStrength(productName))}
-                            </Typography>
-                        </>
+                    {!productNameIsValid && productName !== '' &&
+                        <WordStrength productName={productName} />
                     }
-                    <hr />
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    <Typography>
+                        Product Description:
+                    </Typography>
+                    <TextField
+                        multiline
+                        label="Product Description"
+                        fullWidth
+                        required
+                        rows={4}
+                        margin="normal"
+                        value={productDesc}
+                        onChange={onChangeProductDesc}
+                    >
+                    </TextField>
                 </Box>
                 <Typography>
-                    Product Description:
+                    Add Tags:
                 </Typography>
-                <TextField
-                    multiline
-                    label="Product Description"
-                    fullWidth
-                    rows={4}
-                    margin="normal"
-                    value={productDesc}
-                    onChange={onChangeProductDesc}
+                <Box
+                    display="flex"
+                    alignItems="center"
                 >
-                </TextField>
+                    <TextField
+                        margin="normal"
+                        value={curTag}
+                        onChange={onChangeCurTag}
+                        error={tagErrMsg.length > 0}
+                        label="Product Tags"
+                    >
+                    </TextField>
+                    <Tooltip title="Add Tag">
+                        <IconButton
+                            margin="normal"
+                            color="success"
+                            onClick={handleAddTag}
+                        >
+                            <AddIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    {tagErrMsg != '' && <Typography
+                        color="red"
+                        variant="body1"
+                    >{tagErrMsg}</Typography>}
+                    {allTags.length > 0 &&
+                        <Typography>
+                            Current Tags: {allTags.map(tag => {
+                                return (
+                                    <Chip style={{ margin: "1%" }} label={tag} onDelete={() => { handleTagDelete(tag) }} />
+                                )
+                            })}
+                        </Typography>
+                    }
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    <Typography
+                        gutterBottom
+                    >
+                        Product Category:
+                    </Typography>
+                    <Select
+                        fullWidth
+                        multiple
+                        label="Category"
+                        value={selCategories}
+                        renderValue={(selected) => selected.join(', ')}
+                        onChange={handleCategoryChange}
+                    >
+                        {Categories.map(category => {
+                            return (
+                                <MenuItem value={category}>
+                                    <Checkbox checked={selCategories.indexOf(category) > -1} />
+                                    <ListItemText primary={category} />
+                                </MenuItem>
+                            )
+                        })}
+                    </Select>
+                    {selCategories.length > 0 && <>
+                        <Typography>
+                            Selected Categories:
+                            <ul>
+                                {selCategories.map(ctgr => {
+                                    return (
+                                        <li>{ctgr}</li>
+                                    )
+                                })}
+                            </ul>
+                        </Typography>
+                    </>}
+                </Box>
             </Container>
         </>
     )
