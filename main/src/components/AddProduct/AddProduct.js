@@ -1,12 +1,13 @@
-import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography } from "@mui/material";
+import './AddProduct.css'
+
+import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography, Button } from "@mui/material";
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from "@mui/system";
 import { useState } from "react";
 import WordStrength from "./WordStrength";
 import AddIcon from '@mui/icons-material/Add';
-import './AddProduct.css'
 
-import { db } from "../../FirebaseConfig";
+import { db, storage } from "../../FirebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
 
 const AddProduct = () => {
@@ -25,6 +26,7 @@ const AddProduct = () => {
     const [price, setPrice] = useState(0);
     const [quantity, setQuantity] = useState(0);
     const [image, setImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
 
     const Categories = [
         "Electronics",
@@ -94,6 +96,21 @@ const AddProduct = () => {
         setSelCategories(event.target.value);
     }
 
+    const handlePriceChange = (event) => {
+        setPrice(event.target.value);
+    }
+
+    const handleQuantityChange = (event) => {
+        setQuantity(event.target.value);
+    }
+
+    const handleImageChange = (event) => {
+        if (event.target.files[0]) {
+            setImage(event.target.files[0]);
+            setImagePreview(URL.createObjectURL(event.target.files[0]));
+        }
+    }
+
     const createitem = async () => {
         await addDoc(collectionRef, {
             name: productName,
@@ -110,13 +127,13 @@ const AddProduct = () => {
         <>
             <Container maxWidth="xs">
                 <CssBaseline />
-                <Typography
+                {/* <Typography
                     variant="h2"
                     align="center"
                     gutterBottom
                 >
                     Add Product
-                </Typography>
+                </Typography> */}
 
                 <Box
                     marginBottom="2%"
@@ -161,14 +178,14 @@ const AddProduct = () => {
                     >
                     </TextField>
                 </Box>
-                <Typography>
-                    Add Tags:
-                </Typography>
                 <Box
-                    display="flex"
-                    alignItems="center"
+                    marginBottom="2%"
                 >
+                    <Typography>
+                        Add Tags:
+                    </Typography>
                     <TextField
+                        fullWidth
                         margin="normal"
                         value={curTag}
                         onChange={onChangeCurTag}
@@ -209,7 +226,7 @@ const AddProduct = () => {
                     <Typography
                         gutterBottom
                     >
-                        Product Category:
+                        Category:
                     </Typography>
                     <Select
                         fullWidth
@@ -240,6 +257,71 @@ const AddProduct = () => {
                             </ul>
                         </Typography>
                     </>}
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    <Typography>
+                        Quantity:
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        required
+                        value={quantity}
+                        // onChange={(event) => { setQuantity(event.target.value) }}
+                        margin="normal"
+                    >
+                    </TextField>
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    <Typography>
+                        Price:
+                    </Typography>
+                    <TextField
+                        fullWidth
+                        required
+                        value={price}
+                        // onChange={(event) => { setPrice(event.target.value) }}
+                        margin="normal"
+                    >
+                    </TextField>
+                </Box>
+                <Box 
+                    marginBottom="2%"
+                >
+                    <Typography>
+                        Image:
+                    </Typography>
+                    <input
+                        accept="image/*"
+                        id="contained-button-file"
+                        type="file"
+                        style={{ display: 'none' }}
+                        onChange={(event) => { handleImageChange(event) }}
+                    />
+                    <label htmlFor="contained-button-file">
+                        <Button variant="contained" color="primary" component="span">
+                            Upload
+                        </Button>
+                    </label>
+                </Box>
+                <Box
+                    marginBottom="2%"
+                >
+                    {imagePreview && <img src={imagePreview} alt="Product Image" width="100%" />}
+                </Box>
+                <Box
+                    marginBottom="5%"
+                >
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        // onClick={createitem}
+                    >
+                        Create
+                    </Button>
                 </Box>
             </Container>
         </>

@@ -1,18 +1,24 @@
 import Layout from "./components/Layout";
 import theme from '../src/common/theme';
 import { ThemeProvider } from "@mui/material";
-import AddProduct from "./components/AddProduct/AddProduct";
+import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
+
 import Inventory from "./components/Inventory/Inventory";
+import AddProduct from "./components/AddProduct/AddProduct";
+import Billing from "./components/Billing/Billing";
+
 function App() {
   return (
-    <div className="App">
-
-      <Layout />
+    <Router>
       <ThemeProvider theme={theme}>
-        {/* <AddProduct /> */}
-        <Inventory />
+        <Layout />
+          <Routes>
+            <Route path="/" element={<Inventory />} />
+            <Route path="/add" element={<AddProduct />} />
+            <Route path="/bill" element={<Billing />} />
+          </Routes>
       </ThemeProvider>
-    </div>
+    </Router>
   );
 }
 

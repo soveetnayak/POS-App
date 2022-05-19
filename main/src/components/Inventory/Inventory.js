@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../FirebaseConfig";
 
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+
 function Inventory() {
     const [inventory, setInventory] = useState([]);
     const collectionRef = collection(db, "Inventory");
@@ -18,37 +26,36 @@ function Inventory() {
     //return a table with the inventory
     return (
         <div>
-            <h1>Inventory</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Quantity</th>
-                        <th> Description</th>
-                        <th>Category</th>
-                        <th>Tags</th>
-                        <th>Image</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <TableContainer component={Paper}>
+            <Table aria-label="simple table">
+                <TableHead>
+                    <TableRow>
+                        <TableCell>Name</TableCell>
+                        <TableCell >Price</TableCell>
+                        <TableCell >Quantity</TableCell>
+                        <TableCell >Description</TableCell>
+                        <TableCell >Category</TableCell>
+                        <TableCell >Tags</TableCell>
+                        <TableCell >Image</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
                     {inventory.map((item) => (
-                        <tr key={item.id}>
-                            <td>{item.name}</td>
-                            <td>{item.price}</td>
-                            <td>{item.quantity}</td>
-                            <td>{item.description}</td>
-                            <td>{item.category.map = (c) => (
-                                <li key={c}>{c}</li>
-                            )}</td>
-                            <td>{item.tag.map = (tag) => (
-                                <li key={tag}>{tag}</li>
-                            )}</td>
-                            <td>{item.image}</td>
-                        </tr>
+                        <TableRow key={item.id} >
+                            <TableCell>{item.name}</TableCell>
+                            <TableCell>{item.price}</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>{item.description}</TableCell>
+                            <TableCell>{item.category.join(', ')}</TableCell>
+                            <TableCell>{item.tag.join(', ')}</TableCell>
+                            <TableCell>
+                                <img src={item.image} alt="product" width="100" height="100" />
+                            </TableCell>
+                        </TableRow>
                     ))}
-                </tbody>
-            </table>
+                </TableBody>
+            </Table>
+            </TableContainer>
         </div>
     );
 
