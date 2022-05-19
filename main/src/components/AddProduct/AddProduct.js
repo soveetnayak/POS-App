@@ -117,7 +117,7 @@ const AddProduct = () => {
         if (productName != '') {
             if (productDesc != '') {
                 if (price > 0) {
-                    if (quantity > 0 && quantity.isInteger()) {
+                    if (quantity > 0) {
                         return true;
                     }
                     else {
