@@ -15,7 +15,7 @@ function Layout() {
     
     return (
         <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ bgcolor: "#265a91" }}>
+      <AppBar position="static" sx={{ bgcolor: "#265a91", marginBottom: "2%" }}>
         <Toolbar>
           {/* <IconButton
             size="large"

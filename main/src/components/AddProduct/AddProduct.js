@@ -1,6 +1,6 @@
 import './AddProduct.css'
 
-import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography, Button } from "@mui/material";
+import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography, Button, Grid } from "@mui/material";
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from "@mui/system";
 import { useState } from "react";
@@ -9,10 +9,11 @@ import AddIcon from '@mui/icons-material/Add';
 
 import { db, storage } from "../../FirebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AddProduct = () => {
     const collectionRef = collection(db, "Inventory");
-    
+
 
     const [productName, setProductName] = useState('');
     const [productNameIsTouched, setProductNameIsTouched] = useState(false);
@@ -111,222 +112,276 @@ const AddProduct = () => {
         }
     }
 
+    const ValidateForm = () => {
+
+        if (productName != '') {
+            if (productDesc != '') {
+                if (price > 0) {
+                    if (quantity > 0 && quantity.isInteger()) {
+                        return true;
+                    }
+                    else {
+                        alert("Quantity should be Integer and greater than 0.");
+                        return false;
+                    }
+                }
+                else {
+                    alert("Price should be greater than zero");
+                    return false;
+                }
+            }
+            else {
+                alert("Product Description cannot be empty");
+                return false;
+            }
+        }
+        else {
+            alert("Product Name cannot be empty");
+            return false;
+        }
+
+    }
+
     const createitem = async () => {
-        await addDoc(collectionRef, {
-            name: productName,
-            description: productDesc,
-            category: selCategories,
-            tag: allTags,
-            image: "Building",
-            quantity: quantity,
-            price: price}
-        );
+        if (ValidateForm()) {
+            const imageRef = ref(storage, `Inventory/${productName}`);
+            uploadBytes(imageRef, image).then((snapshot) => {
+                getDownloadURL(snapshot.ref).then((downloadURL) => {
+                    addDoc(collectionRef, {
+                        name: productName,
+                        description: productDesc,
+                        category: selCategories,
+                        tag: allTags,
+                        image: downloadURL,
+                        quantity: quantity,
+                        price: price
+                    }
+                    ).then(() => {
+                        alert("Product Added Successfully");
+                    }).catch(err => {
+                        alert("Could not Add Product");
+                    })
+                })
+            }).catch(err => {
+                alert("Could not Add Product");
+            })
+        }
     }
 
     return (
         <>
-            <Container maxWidth="xs">
+            <Container maxWidth="xl" style={{ paddingBottom: "2%" }}>
                 <CssBaseline />
-                {/* <Typography
+                <Typography
                     variant="h2"
                     align="center"
                     gutterBottom
                 >
                     Add Product
-                </Typography> */}
+                </Typography>
 
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Product Name:
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        required
-                        label="Product Name"
-                        value={productName}
-                        onChange={onChangeProductName}
-                        onBlur={() => { checkProductNameIsValid(productName) }}
-                        error={productNameIsValid}
-                        margin="normal"
-                    >
-                    </TextField>
-                    {productNameIsValid && <Typography
-                        color="red"
-                        variant="body1"
-                    >{errMessage}</Typography>}
-                    {!productNameIsValid && productName !== '' &&
-                        <WordStrength productName={productName} />
-                    }
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Product Description:
-                    </Typography>
-                    <TextField
-                        multiline
-                        label="Product Description"
-                        fullWidth
-                        required
-                        rows={4}
-                        margin="normal"
-                        value={productDesc}
-                        onChange={onChangeProductDesc}
-                    >
-                    </TextField>
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Add Tags:
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        value={curTag}
-                        onChange={onChangeCurTag}
-                        error={tagErrMsg.length > 0}
-                        label="Product Tags"
-                    >
-                    </TextField>
-                    <Tooltip title="Add Tag">
-                        <IconButton
-                            margin="normal"
-                            color="success"
-                            onClick={handleAddTag}
+                <Grid container spacing={10}>
+                    <Grid item xs={12} md={4}>
+                        <Box
+                            marginBottom="2%"
                         >
-                            <AddIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    {tagErrMsg != '' && <Typography
-                        color="red"
-                        variant="body1"
-                    >{tagErrMsg}</Typography>}
-                    {allTags.length > 0 &&
-                        <Typography>
-                            Current Tags: {allTags.map(tag => {
-                                return (
-                                    <Chip style={{ margin: "1%" }} label={tag} onDelete={() => { handleTagDelete(tag) }} />
-                                )
-                            })}
-                        </Typography>
-                    }
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography
-                        gutterBottom
-                    >
-                        Category:
-                    </Typography>
-                    <Select
-                        fullWidth
-                        multiple
-                        label="Category"
-                        value={selCategories}
-                        renderValue={(selected) => selected.join(', ')}
-                        onChange={handleCategoryChange}
-                    >
-                        {Categories.map(category => {
-                            return (
-                                <MenuItem value={category}>
-                                    <Checkbox checked={selCategories.indexOf(category) > -1} />
-                                    <ListItemText primary={category} />
-                                </MenuItem>
-                            )
-                        })}
-                    </Select>
-                    {selCategories.length > 0 && <>
-                        <Typography>
-                            Selected Categories:
-                            <ul>
-                                {selCategories.map(ctgr => {
+                            <Typography>
+                                Image:
+                            </Typography>
+                            <input
+                                accept="image/*"
+                                id="contained-button-file"
+                                type="file"
+                                style={{ display: 'none' }}
+                                onChange={(event) => { handleImageChange(event) }}
+                            />
+                            <label htmlFor="contained-button-file">
+                                <Button variant="contained" color="primary" component="span">
+                                    Upload
+                                </Button>
+                            </label>
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            {imagePreview && <img src={imagePreview} alt="Product Image" width="100%" />}
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography>
+                                Product Name:
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                label="Product Name"
+                                value={productName}
+                                onChange={onChangeProductName}
+                                onBlur={() => { checkProductNameIsValid(productName) }}
+                                error={productNameIsValid}
+                                margin="normal"
+                            >
+                            </TextField>
+                            {productNameIsValid && <Typography
+                                color="red"
+                                variant="body1"
+                            >{errMessage}</Typography>}
+                            {!productNameIsValid && productName !== '' &&
+                                <WordStrength productName={productName} />
+                            }
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography>
+                                Product Description:
+                            </Typography>
+                            <TextField
+                                multiline
+                                label="Product Description"
+                                fullWidth
+                                required
+                                rows={4}
+                                margin="normal"
+                                value={productDesc}
+                                onChange={onChangeProductDesc}
+                            >
+                            </TextField>
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography>
+                                Quantity:
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                value={quantity}
+                                onChange={handleQuantityChange}
+                                margin="normal"
+                            >
+                            </TextField>
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography>
+                                Price:
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                required
+                                value={price}
+                                onChange={handlePriceChange}
+                                margin="normal"
+                            >
+                            </TextField>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography>
+                                Add Tags:
+                            </Typography>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                            >
+                                <TextField
+                                    margin="normal"
+                                    value={curTag}
+                                    onChange={onChangeCurTag}
+                                    error={tagErrMsg.length > 0}
+                                    label="Product Tags"
+                                >
+                                </TextField>
+                                <Tooltip title="Add Tag">
+                                    <IconButton
+                                        margin="normal"
+                                        color="success"
+                                        onClick={handleAddTag}
+                                    >
+                                        <AddIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            {tagErrMsg != '' && <Typography
+                                color="red"
+                                variant="body1"
+                            >{tagErrMsg}</Typography>}
+                            {allTags.length > 0 &&
+                                <Typography>
+                                    Current Tags: {allTags.map(tag => {
+                                        return (
+                                            <Chip style={{ margin: "1%" }} label={tag} onDelete={() => { handleTagDelete(tag) }} />
+                                        )
+                                    })}
+                                </Typography>
+                            }
+                        </Box>
+                        <Box
+                            marginBottom="2%"
+                        >
+                            <Typography
+                                gutterBottom
+                            >
+                                Category:
+                            </Typography>
+                            <Select
+                                fullWidth
+                                multiple
+                                label="Category"
+                                value={selCategories}
+                                renderValue={(selected) => selected.join(', ')}
+                                onChange={handleCategoryChange}
+                            >
+                                {Categories.map(category => {
                                     return (
-                                        <li>{ctgr}</li>
+                                        <MenuItem value={category}>
+                                            <Checkbox checked={selCategories.indexOf(category) > -1} />
+                                            <ListItemText primary={category} />
+                                        </MenuItem>
                                     )
                                 })}
-                            </ul>
-                        </Typography>
-                    </>}
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Quantity:
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        required
-                        value={quantity}
-                        // onChange={(event) => { setQuantity(event.target.value) }}
-                        margin="normal"
-                    >
-                    </TextField>
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Price:
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        required
-                        value={price}
-                        // onChange={(event) => { setPrice(event.target.value) }}
-                        margin="normal"
-                    >
-                    </TextField>
-                </Box>
-                <Box 
-                    marginBottom="2%"
-                >
-                    <Typography>
-                        Image:
-                    </Typography>
-                    <input
-                        accept="image/*"
-                        id="contained-button-file"
-                        type="file"
-                        style={{ display: 'none' }}
-                        onChange={(event) => { handleImageChange(event) }}
-                    />
-                    <label htmlFor="contained-button-file">
-                        <Button variant="contained" color="primary" component="span">
-                            Upload
-                        </Button>
-                    </label>
-                </Box>
-                <Box
-                    marginBottom="2%"
-                >
-                    {imagePreview && <img src={imagePreview} alt="Product Image" width="100%" />}
-                </Box>
-                <Box
-                    marginBottom="5%"
+                            </Select>
+                            {selCategories.length > 0 && <>
+                                <Typography>
+                                    Selected Categories:
+                                    <ul>
+                                        {selCategories.map(ctgr => {
+                                            return (
+                                                <li>{ctgr}</li>
+                                            )
+                                        })}
+                                    </ul>
+                                </Typography>
+                            </>}
+                        </Box>
+                    </Grid>
+                </Grid>
+                <Typography
+                    align="center"
                 >
                     <Button
                         variant="contained"
-                        color="secondary"
-                        // onClick={createitem}
+                        onClick={createitem}
                     >
-                        Create
+                        Submit
                     </Button>
-                </Box>
+                </Typography>
             </Container>
         </>
     )
-
 }
 
 export default AddProduct;
