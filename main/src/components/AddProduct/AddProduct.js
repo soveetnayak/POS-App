@@ -1,33 +1,49 @@
 import './AddProduct.css'
 
-import { Checkbox, Chip, Container, FormControl, IconButton, InputLabel, ListItemText, MenuItem, Select, TextField, Tooltip, Typography, Button, Grid } from "@mui/material";
+import { Checkbox, Chip, Container, IconButton, ListItemText, MenuItem, Select, TextField, Tooltip, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, TableContainer, Table, TableCell, Paper, TableHead, TableRow, TableBody } from "@mui/material";
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from "@mui/system";
 import { useState } from "react";
 import WordStrength from "./WordStrength";
 import AddIcon from '@mui/icons-material/Add';
+import Fuse from 'fuse.js';
 
 import { db, storage } from "../../FirebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const AddProduct = () => {
     const collectionRef = collection(db, "Inventory");
 
-
     const [productName, setProductName] = useState('');
-    const [productNameIsTouched, setProductNameIsTouched] = useState(false);
-    const [errMessage, setErrMessage] = useState('');
+    const [productNameErrMessage, setProductNameErrMessage] = useState('');
     const [productNameIsValid, setProductNameIsValid] = useState(false);
+    const [productNameIsTouched, setProductNameIsTouched] = useState(false);
+
     const [productDesc, setProductDesc] = useState('');
+    const [productDescErrMessage, setProductDescErrMessage] = useState('');
+    const [productDescIsValid, setProductDescIsValid] = useState(false);
+    const [productDescIsTouched, setProductDescIsTouched] = useState(false);
+
+    const [price, setPrice] = useState('');
+    const [priceIsValid, setPriceIsValid] = useState(false);
+    const [priceErrMessage, setPriceErrMessage] = useState('');
+    const [priceIsTouched, setPriceIsTouched] = useState(false);
+
+    const [quantity, setQuantity] = useState('');
+    const [quantityIsValid, setQuantityIsValid] = useState(false);
+    const [quantityErrMessage, setQuantityErrMessage] = useState('');
+    const [quantityIsTouched, setQuantityIsTouched] = useState(false);
+
     const [curTag, setCurTag] = useState('');
     const [allTags, setAllTags] = useState([]);
     const [tagErrMsg, setTagErrMsg] = useState('');
     const [selCategories, setSelCategories] = useState([]);
-    const [price, setPrice] = useState(0);
-    const [quantity, setQuantity] = useState(0);
+
     const [image, setImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [modal, setModal] = useState(false);
+    const [similarItems, setSimilarItems] = useState([]);
 
     const Categories = [
         "Electronics",
@@ -40,34 +56,105 @@ const AddProduct = () => {
     ]
 
     const checkProductNameIsValid = (name) => {
-        setProductNameIsTouched(true);
-        if (name.trim() !== '' &&
-            name.trim().split(' ').length <= 4
-        ) {
+
+        if (name.trim() === '') {
             setProductNameIsValid(false);
+            setProductNameErrMessage("Product Name cannot be empty");
+            return;
         }
-        else {
+
+        if (name.trim().split(' ').length > 4) {
+            setProductNameIsValid(false);
+            setProductNameErrMessage("Product Name should be less than or equal to 4 words");
+            return;
+        }
+
+        if (!productNameIsValid)
             setProductNameIsValid(true);
-            if (name.trim(' ') === '') {
-                setErrMessage("Product Name cannot be empty");
-            }
-            else {
-                setErrMessage("Product Name should be less than or equal to 4 words");
-            }
-        }
+
+        return;
     }
 
     const onChangeProductName = (event) => {
         setProductName(event.target.value);
-        if (productNameIsTouched) {
-            checkProductNameIsValid(event.target.value);
+        checkProductNameIsValid(event.target.value);
+    }
+
+    const checkProductDescIsValid = (desc) => {
+
+        if (desc.trim().length < 50) {
+            setProductDescIsValid(false);
+            setProductDescErrMessage("Product Description must be of atleast 50 characters");
+            return;
         }
+
+        if (desc.trim().length > 200) {
+            setProductDescIsValid(false);
+            setProductDescErrMessage("Product Description must be of atmost 200 characters");
+            return;
+        }
+
+        if (!productDescIsValid)
+            setProductDescIsValid(true);
+
+        return;
     }
 
     const onChangeProductDesc = (event) => {
         setProductDesc(event.target.value);
+        checkProductDescIsValid(event.target.value);
     }
 
+
+    const checkPriceIsValid = (pr) => {
+
+        if (isNaN(Number(pr))) {
+            setPriceIsValid(false);
+            setPriceErrMessage("Price must be a valid Number");
+            return;
+        }
+
+        if (Number(pr) <= 0) {
+            setPriceIsValid(false);
+            setPriceErrMessage("Price must be a positive number greater than 0");
+            return;
+        }
+
+        if (!priceIsValid)
+            setPriceIsValid(true);
+
+        return;
+    }
+
+    const handlePriceChange = (event) => {
+        setPrice(event.target.value);
+        checkPriceIsValid(event.target.value);
+    }
+
+    const checkQuantityIsValid = (qty) => {
+
+        if (isNaN(Number(qty))) {
+            setQuantityIsValid(false);
+            setQuantityErrMessage("Quantity must be a valid number");
+            return;
+        }
+
+        if (Number(qty) <= 0 || !Number.isInteger(Number(qty))) {
+            setQuantityIsValid(false);
+            setQuantityErrMessage("Quantity must be a positive whole number");
+            return;
+        }
+
+        if (!quantityIsValid)
+            setQuantityIsValid(true);
+
+        return;
+    }
+
+    const handleQuantityChange = (event) => {
+        setQuantity(event.target.value);
+        checkQuantityIsValid(event.target.value);
+    }
 
     const onChangeCurTag = (event) => {
         setCurTag(event.target.value);
@@ -97,14 +184,6 @@ const AddProduct = () => {
         setSelCategories(event.target.value);
     }
 
-    const handlePriceChange = (event) => {
-        setPrice(event.target.value);
-    }
-
-    const handleQuantityChange = (event) => {
-        setQuantity(event.target.value);
-    }
-
     const handleImageChange = (event) => {
         if (event.target.files[0]) {
             setImage(event.target.files[0]);
@@ -114,58 +193,105 @@ const AddProduct = () => {
 
     const ValidateForm = () => {
 
-        if (productName != '') {
-            if (productDesc != '') {
-                if (price > 0) {
-                    if (quantity > 0) {
-                        return true;
-                    }
-                    else {
-                        alert("Quantity should be Integer and greater than 0.");
-                        return false;
-                    }
-                }
-                else {
-                    alert("Price should be greater than zero");
-                    return false;
-                }
-            }
-            else {
-                alert("Product Description cannot be empty");
-                return false;
-            }
-        }
-        else {
-            alert("Product Name cannot be empty");
+        if (!productNameIsValid) {
+            alert(productNameErrMessage);
             return false;
         }
 
+        if (!productDescIsValid) {
+            alert(productDescErrMessage);
+            return false;
+        }
+
+        if (!quantityIsValid) {
+            alert(quantityErrMessage);
+            return false;
+        }
+
+        if (!priceIsValid) {
+            alert(priceErrMessage);
+            return false;
+        }
+
+        return true;
+    }
+
+    const ClearForm = () => {
+
+        setProductName('');
+        setProductDesc('');
+        setQuantity('');
+        setPrice('');
+        setCurTag('');
+        setAllTags('');
+        setSelCategories('');
+
+    }
+
+    const additem = () => {
+        if (modal)
+            setModal(false);
+
+        const imageRef = ref(storage, `Inventory/${productName}`);
+        uploadBytes(imageRef, image).then((snapshot) => {
+            getDownloadURL(snapshot.ref).then((downloadURL) => {
+                addDoc(collectionRef, {
+                    name: productName,
+                    description: productDesc,
+                    category: selCategories,
+                    tag: allTags,
+                    image: downloadURL,
+                    quantity: quantity,
+                    price: price
+                }
+                ).then(() => {
+                    ClearForm();
+                    alert("Product Added Successfully");
+                }).catch(err => {
+                    alert("Could not Add Product");
+                })
+            })
+        }).catch(err => {
+            alert("Could not Add Product");
+        })
+    }
+
+    const getSimilarItems = async () => {
+        const data = await getDocs(collectionRef);
+        const Inventory = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+        console.log(Inventory);
+        const fuse = new Fuse(Inventory, {
+            keys: ["name"]
+        })
+        const pattern = productName;
+        const simlrItems = fuse.search(pattern);
+        return simlrItems;
     }
 
     const createitem = async () => {
+
         if (ValidateForm()) {
-            const imageRef = ref(storage, `Inventory/${productName}`);
-            uploadBytes(imageRef, image).then((snapshot) => {
-                getDownloadURL(snapshot.ref).then((downloadURL) => {
-                    addDoc(collectionRef, {
-                        name: productName,
-                        description: productDesc,
-                        category: selCategories,
-                        tag: allTags,
-                        image: downloadURL,
-                        quantity: quantity,
-                        price: price
-                    }
-                    ).then(() => {
-                        alert("Product Added Successfully");
-                    }).catch(err => {
-                        alert("Could not Add Product");
-                    })
-                })
-            }).catch(err => {
-                alert("Could not Add Product");
-            })
+
+            const simlrItems = await getSimilarItems();
+
+            if (simlrItems.length > 0) 
+            {
+                console.log(simlrItems);
+                setSimilarItems(simlrItems);
+                setModal(true);
+            }
+            else 
+            {
+                additem();
+            }
+
         }
+    }
+
+    const handleCloseDialog = () => {
+
+        setModal(false);
+
     }
 
     return (
@@ -220,16 +346,16 @@ const AddProduct = () => {
                                 label="Product Name"
                                 value={productName}
                                 onChange={onChangeProductName}
-                                onBlur={() => { checkProductNameIsValid(productName) }}
-                                error={productNameIsValid}
+                                onBlur={() => { setProductNameIsTouched(true) }}
+                                error={productNameIsTouched && !productNameIsValid}
                                 margin="normal"
                             >
                             </TextField>
-                            {productNameIsValid && <Typography
+                            {productNameIsTouched && !productNameIsValid && <Typography
                                 color="red"
                                 variant="body1"
-                            >{errMessage}</Typography>}
-                            {!productNameIsValid && productName !== '' &&
+                            >{productNameErrMessage}</Typography>}
+                            {productNameIsValid &&
                                 <WordStrength productName={productName} />
                             }
                         </Box>
@@ -248,8 +374,22 @@ const AddProduct = () => {
                                 margin="normal"
                                 value={productDesc}
                                 onChange={onChangeProductDesc}
+                                onBlur={() => { setProductDescIsTouched(true) }}
+                                error={productDescIsTouched && !productDescIsValid}
                             >
                             </TextField>
+                            <Typography
+                                variant="body1"
+                            >
+                                Current Character Count: {productDesc.length}
+                            </Typography>
+                            {productDescIsTouched && !productDescIsValid &&
+                                <div>
+                                    <Typography
+                                        color="red"
+                                        variant="body1"
+                                    >{productDescErrMessage}</Typography>
+                                </div>}
                         </Box>
                         <Box
                             marginBottom="2%"
@@ -260,11 +400,20 @@ const AddProduct = () => {
                             <TextField
                                 fullWidth
                                 required
+                                label="Quantity"
                                 value={quantity}
+                                error={quantityIsTouched && !quantityIsValid}
+                                onBlur={() => { setQuantityIsTouched(true) }}
                                 onChange={handleQuantityChange}
                                 margin="normal"
                             >
                             </TextField>
+                            {quantityIsTouched && !quantityIsValid &&
+                                <Typography
+                                    color="red"
+                                    variant="body1"
+                                >{quantityErrMessage}</Typography>
+                            }
                         </Box>
                         <Box
                             marginBottom="2%"
@@ -275,11 +424,20 @@ const AddProduct = () => {
                             <TextField
                                 fullWidth
                                 required
+                                label="Price"
                                 value={price}
+                                error={priceIsTouched && !priceIsValid}
                                 onChange={handlePriceChange}
+                                onBlur={() => { setPriceIsTouched(true) }}
                                 margin="normal"
                             >
                             </TextField>
+                            {priceIsTouched && !priceIsValid &&
+                                <Typography
+                                    color="red"
+                                    variant="body1"
+                                >{priceErrMessage}</Typography>
+                            }
                         </Box>
                     </Grid>
                     <Grid item xs={12} md={4}>
@@ -379,6 +537,112 @@ const AddProduct = () => {
                         Submit
                     </Button>
                 </Typography>
+                <Dialog
+                    open={modal}
+                    maxWidth="lg"
+                >
+                    <Box
+                        padding="2%"
+                    >
+
+                        <Typography
+                            align="left"
+                            variant="h4"
+                        >
+                            Found the following Similar Items already in Inventory:
+                        </Typography>
+
+                        <TableContainer component={Paper}>
+                            <Table aria-label="simple table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell >Price</TableCell>
+                                        <TableCell >Quantity</TableCell>
+                                        <TableCell >Description</TableCell>
+                                        <TableCell >Category</TableCell>
+                                        <TableCell >Tags</TableCell>
+                                        <TableCell >Image</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {similarItems.map((item) => (
+                                        <TableRow key={item.id} >
+                                            <TableCell>{item.item.name}</TableCell>
+                                            <TableCell>{item.item.price}</TableCell>
+                                            <TableCell>{item.item.quantity}</TableCell>
+                                            <TableCell>{item.item.description}</TableCell>
+                                            <TableCell>{item.item.category.join(', ')}</TableCell>
+                                            <TableCell>{item.item.tag.join(',')}</TableCell>
+                                            <TableCell>
+                                                <img src={item.item.image} alt="product" width="100" height="100" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <br />
+                        <Typography
+                            variant="h4"
+                            align="left"
+                        >
+                            Do you still want to add the following product?
+                        </Typography>
+                        <TableContainer component={Paper}>
+                            <Table aria-label="simple table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell >Price</TableCell>
+                                        <TableCell >Quantity</TableCell>
+                                        <TableCell >Description</TableCell>
+                                        <TableCell >Category</TableCell>
+                                        <TableCell >Tags</TableCell>
+                                        <TableCell >Image</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>{productName}</TableCell>
+                                        <TableCell>{price}</TableCell>
+                                        <TableCell>{quantity}</TableCell>
+                                        <TableCell>{productDesc}</TableCell>
+                                        <TableCell>{selCategories.join(', ')}</TableCell>
+                                        <TableCell>{allTags.join(',')}</TableCell>
+                                        <TableCell>
+                                            <img src={imagePreview} alt="product" width="100" height="100" />
+                                        </TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <br />
+                        <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                            <Typography
+                            >
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    onClick={handleCloseDialog}
+                                >
+                                    Cancel
+                                </Button>
+                            </Typography>
+                            <Typography
+                                align="right"
+                            >
+                                <Button
+                                    variant="contained"
+                                    color="info"
+                                    onClick={additem}
+                                >
+                                    Add
+                                </Button>
+                            </Typography>
+                        </div>
+                    </Box>
+                </Dialog>
             </Container>
         </>
     )
