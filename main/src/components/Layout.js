@@ -38,6 +38,9 @@ function Layout() {
             <Button color="inherit" onClick={() => navigate("/bill")}>
                 Billing
             </Button>
+            <Button color="inherit" onClick={() => navigate("/allbills")}>
+                All Bills
+            </Button>
         </Toolbar>
       </AppBar>
     </Box>

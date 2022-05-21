@@ -1,0 +1,32 @@
+.column {
+    float: left;
+    padding: 10px;
+    height: 100%;
+  }
+  
+  .left {
+    width: 50%;
+    position: fixed;
+      left: 0;
+  }
+  
+  .right {
+    width: 50%;
+    position: fixed;
+      right: 0;
+
+  }
+  
+  /* Clear floats after the columns */
+  .row{
+    content: "";
+    display: table;
+  }
+
+  .up {
+    height: 75%;
+  }
+
+  .down {
+    height: 25%;
+  }
