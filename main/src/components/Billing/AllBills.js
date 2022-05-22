@@ -9,8 +9,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Button, Container, Dialog, DialogActions, TextField } from "@mui/material";
-import { DialogContent } from "@material-ui/core";
+import { Button, Container, Dialog, DialogContent, DialogActions, TextField } from "@mui/material";
 
 
 function AllBills () {
