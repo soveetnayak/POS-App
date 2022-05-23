@@ -18,10 +18,7 @@ function AllBills () {
     const [customerno, setCustomerno] = useState(0);
     const [date, setDate] = useState('');
     const [total, setTotal] = useState(0);
-    const [productid, setProductid] = useState([]);
-    const [productname, setProductname] = useState([]);
-    const [quantity, setQuantity] = useState([]);
-    const [rate, setRate] = useState([]);
+    const [products, setProducts] = useState([]);
 
     const [bills, setBills] = useState([]);
     const collectionRef = collection(db, "Bills");
@@ -40,14 +37,9 @@ function AllBills () {
         setBillid(id);
         const bill = bills.filter(bill => bill.id === id);
         setCustomername(bill[0].customername);
-        setCustomerno(bill[0].customerno);
         setDate(bill[0].date);
         setTotal(bill[0].total);
-        setProductid(bill[0].productid);
-        setProductname(bill[0].productname);
-        setQuantity(bill[0].quantity);
-        setRate(bill[0].rate);
-
+        setProducts(bill[0].products);
         setViewbool(true);
     }
 
@@ -104,10 +96,6 @@ function AllBills () {
                         {customername}
                     </p>
                     <p>
-                        <b>Customer No: </b>
-                        {customerno}
-                    </p>
-                    <p>
                         <b>Date: </b>
                         {date.toDate().toDateString()}
                     </p>
@@ -127,20 +115,19 @@ function AllBills () {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {productid.map((id, index) => (
-                                    <TableRow key={id}>
+                                {products.map(product => (
+                                    <TableRow key={product.id}>
                                         <TableCell component="th" scope="row">
-                                            {id}
+                                            {product.id}
                                         </TableCell>
-                                        <TableCell>{productname[index]}</TableCell>
-                                        <TableCell>{quantity[index]}</TableCell>
-                                        <TableCell>{rate[index]}</TableCell>
+                                        <TableCell>{product.name}</TableCell>
+                                        <TableCell>{product.quantity}</TableCell>
+                                        <TableCell>{product.name}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </TableContainer>
-
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleToClose} color="primary" autoFocus>
