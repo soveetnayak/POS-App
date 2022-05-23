@@ -189,7 +189,7 @@ function Billing() {
   return (
     <Container maxWidth="xl">
       <Typography
-        variant="h3"
+        variant="h4"
         align="center"
         gutterBottom
       >
@@ -200,12 +200,12 @@ function Billing() {
           <Typography
 
           >
-            Date: {date.toLocaleDateString()}
+            <b>Date:</b> {date.toLocaleDateString()}
           </Typography>
           <Typography
 
           >
-            Current Time:{curTime}
+            <b>Current Time:</b> {curTime}
           </Typography>
         </Grid>
         <Grid item xs={12} display="flex" alignItems="center">
@@ -240,7 +240,7 @@ function Billing() {
             onInputChange={handleCurProductInputValueChange}
             getOptionLabel={(option) => option.name + " " + option.description + " "}
             sx={{ width: "100%" }}
-            renderInput={(params) => <TextField {...params} label="Product" />}
+            renderInput={(params) => <TextField {...params} />}
           />
         </Grid>
         <Grid item xs={12}>
@@ -313,7 +313,7 @@ function Billing() {
             <Typography
               variant="h5"
             >
-              Cart
+              Cart 
               <ShoppingCartIcon />
             </Typography>
 
@@ -363,7 +363,7 @@ function Billing() {
               <Typography
                 gutterBottom
               >
-                {totalamount != '' && <>Total amount: Rs.{totalamount}/-</>}
+                {totalamount != '' && <><b>Total amount:</b> Rs.{totalamount}/-</>}
               </Typography>
             </div>
             <div className="row down">
@@ -429,7 +429,7 @@ function Billing() {
               </Table>
             </TableContainer>
             <Typography
-              variant="h6"
+              variant="h5"
             >
               Total Amount: Rs.{totalamount}/-
             </Typography>
