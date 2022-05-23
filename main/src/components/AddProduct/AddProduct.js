@@ -32,71 +32,11 @@ import { db, storage } from "../../FirebaseConfig";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// import { withStyles } from "@material-ui/core/styles";
-// import { makeStyles } from "@material-ui/core/styles";
-// import MuiDialogTitle from "@material-ui/core/DialogTitle";
-// import MuiDialogContent from "@material-ui/core/DialogContent";
-// import MuiDialogActions from "@material-ui/core/DialogActions";
-// import CloseIcon from "@material-ui/icons/Close";
-// import PublishIcon from "@material-ui/icons/Publish";
+import PublishIcon from "@mui/icons-material/Publish";
 
-import { DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
-import PublishIcon from '@mui/icons-material/Publish';
+import { useState } from "react";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-
-import ReactCrop from "react-image-crop";
-
-// const styless = makeStyles((theme) => ({
-//   root: {
-//     background: "#4caf50",
-//   },
-// }));
-
-// const styles = (theme) => ({
-//   root: {
-//     margin: 0,
-//     padding: theme.spacing(2),
-//   },
-//   closeButton: {
-//     position: "absolute",
-//     right: theme.spacing(1),
-//     top: theme.spacing(1),
-//     color: theme.palette.grey[500],
-//   },
-// });
-
-// const DialogTitle = withStyles(styles)((props) => {
-//   const { children, classes, onClose, ...other } = props;
-//   return (
-//     <MuiDialogTitle disableTypography className={classes.root} {...other}>
-//       <Typography variant="h6">{children}</Typography>
-//       {onClose ? (
-//         <IconButton
-//           aria-label="close"
-//           className={classes.closeButton}
-//           onClick={onClose}
-//         >
-//           <CloseIcon />
-//         </IconButton>
-//       ) : null}
-//     </MuiDialogTitle>
-//   );
-// });
-
-// const DialogContent = withStyles((theme) => ({
-//   root: {
-//     padding: theme.spacing(2),
-//   },
-// }))(MuiDialogContent);
-
-// const DialogActions = withStyles((theme) => ({
-//   root: {
-//     margin: 0,
-//     padding: theme.spacing(1),
-//   },
-// }))(MuiDialogActions);
+import CropEasy from "./CropEasy";
 
 const AddProduct = () => {
   const collectionRef = collection(db, "Inventory");
@@ -125,75 +65,6 @@ const AddProduct = () => {
   const [allTags, setAllTags] = useState([]);
   const [tagErrMsg, setTagErrMsg] = useState("");
   const [selCategories, setSelCategories] = useState([]);
-
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-
-  ////////////////////////////////////////////////////////////////////////////////
-
-  const imgRef = useRef(null);
-  const previewCanvasRef = useRef(null);
-  const [crop, setCrop] = useState({ unit: "%", width: 30, aspect: 9 / 16 });
-  const [completedCrop, setCompletedCrop] = useState(null);
-
-  const onLoad = useCallback((img) => {
-    imgRef.current = img;
-  }, []);
-
-  useEffect(() => {
-    if (!completedCrop || !previewCanvasRef.current || !imgRef.current) {
-      return;
-    }
-
-    const image = imgRef.current;
-    const canvas = previewCanvasRef.current;
-    const crop = completedCrop;
-
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    const ctx = canvas.getContext("2d");
-    const pixelRatio = window.devicePixelRatio;
-
-    canvas.width = crop.width * pixelRatio;
-    canvas.height = crop.height * pixelRatio;
-
-    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    ctx.imageSmoothingQuality = "high";
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
-  }, [completedCrop]);
-
-  const [open, setOpen] = useState(false);
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const [filename, setFileName] = useState("");
-  const [files, setFiles] = useState(null);
-
-  const handleChange = (e) => {
-      //Image upload
-      if (e.target.files[0]) {
-        const image = e.target.files[0];
-        setFileName(image.name);
-        setFiles(URL.createObjectURL(image));
-      }
-  };
-  ////////////////////////////////////////////////////////////////////////////////
 
   const [modal, setModal] = useState(false);
   const [similarItems, setSimilarItems] = useState([]);
@@ -334,13 +205,6 @@ const AddProduct = () => {
     setSelCategories(event.target.value);
   };
 
-  const handleImageChange = (event) => {
-    if (event.target.files[0]) {
-      setImage(event.target.files[0]);
-      setImagePreview(URL.createObjectURL(event.target.files[0]));
-    }
-  };
-
   const ValidateForm = () => {
     if (!productNameIsValid) {
       alert(productNameErrMessage);
@@ -379,7 +243,7 @@ const AddProduct = () => {
     if (modal) setModal(false);
 
     const imageRef = ref(storage, `Inventory/${productName}`);
-    uploadBytes(imageRef, image)
+    uploadBytes(imageRef, file)
       .then((snapshot) => {
         getDownloadURL(snapshot.ref).then((downloadURL) => {
           addDoc(collectionRef, {
@@ -435,6 +299,22 @@ const AddProduct = () => {
     setModal(false);
   };
 
+  const [file, setFile] = useState(null);
+  const [photoURL, setPhotoURL] = useState(null);
+  const [openCrop, setOpenCrop] = useState(false);
+
+  const handleChange = (e) => {
+    setFile(null);
+    setPhotoURL(null);
+
+    const file = e.target.files[0];
+    if (file) {
+      setFile(file);
+      setPhotoURL(URL.createObjectURL(file));
+      setOpenCrop(true);
+    }
+  };
+
   return (
     <>
       <Container maxWidth="xl" style={{ paddingBottom: "2%" }}>
@@ -446,94 +326,21 @@ const AddProduct = () => {
         <Grid container spacing={10}>
           <Grid item xs={12} md={4}>
             <div>
-              <Box marginBottom="2%" >
-                <Typography>
-                  Image Upload:
-                </Typography>
-              <Button
-                onClick={handleClickOpen}
-                variant="contained"
-              >
-                <PublishIcon />
-                 Choose Image
-              </Button>
+              <Box marginBottom="2%">
+                <Typography>Image Upload:</Typography>
+                <Button variant="contained" component="label">
+                  <PublishIcon />
+                  {/* Choose Image */}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleChange}
+                  />
+                </Button>
               </Box>
-              <div>
-                <Dialog
-                  onClose={handleClose}
-                  aria-labelledby="customized-dialog-title"
-                  open={open}
-                >
-                  <DialogTitle
-                    id="customized-dialog-title"
-                    onClose={handleClose}
-                  >
-                    <div>
-                      {" "}
-                      <Typography align="center">
-                        <b> Image Crop </b>
-                      </Typography>
-                      {" "}
-                    </div>
-                  </DialogTitle>
-
-                  <DialogContent dividers>
-                    <Box>
-                      <div className="Image" style={{ marginTop: "10px" }}>
-                        { files && (
-                          <img src={files} alt="cropped" style={{ width: "100%" }} />
-                        )}
-                          <ReactCrop
-                            src={files}
-                            onImageLoaded={onLoad}
-                            crop={crop}
-                            onChange={(c) => setCrop(c)}
-                            onComplete={(c) => setCompletedCrop(c)}
-                            style={{ height: "120px", width: "200px" }}
-                          />
-                          <div>
-                            <canvas
-                              ref={previewCanvasRef}
-                              // Rounding is important so the canvas width and height matches/is a multiple for sharpness.
-                              style={{
-                                width: Math.round(completedCrop?.width ?? 0),
-                                height: Math.round(completedCrop?.height ?? 0),
-                              }}
-                            />
-                          </div>
-                        
-                      </div>
-                      {filename !== "" ? (<></>
-                      ) : (
-                        <Box align="center">
-                          <Button
-                            variant="contained"
-                            size="small"
-                            component="label"
-                          >
-                            Choose Image
-                            <input
-                              type="file"
-                              accept="image/*"
-                              hidden
-                              onChange={handleChange}
-                            />
-                          </Button>
-                        </Box>
-                      )}
-                    </Box>
-                  </DialogContent>
-                  <DialogActions>
-                    <Button
-                      autoFocus
-                      onClick={handleClose}
-                      style={{ color: "green" }}
-                    >
-                      Submit
-                    </Button>
-                  </DialogActions>
-                </Dialog>
-              </div>
+              { openCrop ? <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile }} /> : <></>}
+              {/* { !openCrop && file ? <img src={photoURL} alt="preview" style={{ width: "100%" }} /> : <></>} */}
             </div>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -780,7 +587,7 @@ const AddProduct = () => {
                     <TableCell>{allTags.join(",")}</TableCell>
                     <TableCell>
                       <img
-                        src={imagePreview}
+                        src={photoURL}
                         alt="product"
                         width="100"
                         height="100"
