@@ -42,29 +42,33 @@ const AddProduct = () => {
   const collectionRef = collection(db, "Inventory");
 
   const [productName, setProductName] = useState("");
-  const [productNameErrMessage, setProductNameErrMessage] = useState("");
+  const [productNameErrMessage, setProductNameErrMessage] = useState("Product Name Cannot be empty");
   const [productNameIsValid, setProductNameIsValid] = useState(false);
   const [productNameIsTouched, setProductNameIsTouched] = useState(false);
 
   const [productDesc, setProductDesc] = useState("");
-  const [productDescErrMessage, setProductDescErrMessage] = useState("");
+  const [productDescErrMessage, setProductDescErrMessage] = useState("Product Description Cannot be empty");
   const [productDescIsValid, setProductDescIsValid] = useState(false);
   const [productDescIsTouched, setProductDescIsTouched] = useState(false);
 
   const [price, setPrice] = useState("");
   const [priceIsValid, setPriceIsValid] = useState(false);
-  const [priceErrMessage, setPriceErrMessage] = useState("");
+  const [priceErrMessage, setPriceErrMessage] = useState("Price Cannot be empty");
   const [priceIsTouched, setPriceIsTouched] = useState(false);
 
   const [quantity, setQuantity] = useState("");
   const [quantityIsValid, setQuantityIsValid] = useState(false);
-  const [quantityErrMessage, setQuantityErrMessage] = useState("");
+  const [quantityErrMessage, setQuantityErrMessage] = useState("Quantity Cannot be empty");
   const [quantityIsTouched, setQuantityIsTouched] = useState(false);
 
   const [curTag, setCurTag] = useState("");
   const [allTags, setAllTags] = useState([]);
   const [tagErrMsg, setTagErrMsg] = useState("");
+
   const [selCategories, setSelCategories] = useState([]);
+  const [selCatIsValid, setSelCatIsValid] = useState(false);
+  const [selCatIsTouched, setSelCatIsTouched] = useState(false);
+  const [selCatErrMessage, setSelCaErrMessage] = useState("Please Select atleast one category");
 
   const [modal, setModal] = useState(false);
   const [similarItems, setSimilarItems] = useState([]);
@@ -201,28 +205,49 @@ const AddProduct = () => {
     setAllTags([...temp]);
   };
 
+  const checkSelCategoryIsValid = (categories) => {
+
+    if (categories.length < 1) {
+      setSelCatIsValid(false);
+      return;
+    }
+
+    if (!selCatIsValid)
+      setSelCatIsValid(true);
+
+    return;
+  }
+
   const handleCategoryChange = (event) => {
     setSelCategories(event.target.value);
+    checkSelCategoryIsValid(event.target.value);
   };
 
   const ValidateForm = () => {
+
+    setProductNameIsTouched(true);
+    setProductDescIsTouched(true);
+    setQuantityIsTouched(true);
+    setPriceIsTouched(true);
+    setSelCatIsTouched(true);
+
     if (!productNameIsValid) {
-      alert(productNameErrMessage);
       return false;
     }
 
     if (!productDescIsValid) {
-      alert(productDescErrMessage);
       return false;
     }
 
     if (!quantityIsValid) {
-      alert(quantityErrMessage);
       return false;
     }
 
     if (!priceIsValid) {
-      alert(priceErrMessage);
+      return false;
+    }
+
+    if (!selCatIsValid) {
       return false;
     }
 
@@ -339,7 +364,7 @@ const AddProduct = () => {
                   />
                 </Button>
               </Box>
-              { openCrop ? <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile }} /> : <></>}
+              {openCrop ? <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile }} /> : <></>}
               {/* { !openCrop && file ? <img src={photoURL} alt="preview" style={{ width: "100%" }} /> : <></>} */}
             </div>
           </Grid>
@@ -487,6 +512,7 @@ const AddProduct = () => {
                 value={selCategories}
                 renderValue={(selected) => selected.join(", ")}
                 onChange={handleCategoryChange}
+                onBlur={() => { setSelCatIsTouched(true) }}
               >
                 {Categories.map((category) => {
                   return (
@@ -499,6 +525,11 @@ const AddProduct = () => {
                   );
                 })}
               </Select>
+              {selCatIsTouched && !selCatIsValid &&
+                <Typography
+                  color="red"
+                >{selCatErrMessage}</Typography>
+              }
               {selCategories.length > 0 && (
                 <>
                   <Typography>

@@ -31,6 +31,10 @@ function Billing() {
 
 
   const [custName, setCustName] = useState('');
+  const [custNameIsValid, setCustNameIsValid] = useState(false);
+  const [custNameIsTouched, setCustNameIsTouched] = useState(false);
+
+
   const [curProduct, setCurProduct] = useState(emptyProduct);
   const [curProductInputValue, setCurProductInputValue] = useState('');
 
@@ -151,20 +155,26 @@ function Billing() {
   }
 
   const onCheckout = () => {
-    if (cart.length > 0) {
-      addDoc(collectionRefBills, {
-        customername: custName,
-        date: new Date(),
-        products: cart,
-        total: totalamount,
-      }).then(() => {
-        setBillDialog(true);
-      })
+
+    if (custName.trim().length == 0) {
+      alert("Customer Name cannot be empty");
+      return;
     }
-    else {
+
+    if (cart.length == 0) {
       alert("Cart Cannot be empty");
       return;
     }
+
+    addDoc(collectionRefBills, {
+      customername: custName,
+      date: new Date(),
+      products: cart,
+      total: totalamount,
+    }).then(() => {
+      setBillDialog(true);
+    })
+
   }
 
   const onDownload = () => {
@@ -221,8 +231,16 @@ function Billing() {
             }}
             value={custName}
             onChange={onChangeCustName}
+            onBlur={() => { setCustNameIsTouched(true) }}
           >
           </TextField>
+          {custNameIsTouched && custName.trim().length == 0 &&
+            <Typography
+              color="red"
+            >
+              Customer Name Cannot be empty
+            </Typography>
+          }
         </Grid>
         <Grid item xs={12} display="flex" alignItems="center">
           <Typography
@@ -313,7 +331,7 @@ function Billing() {
             <Typography
               variant="h5"
             >
-              Cart 
+              Cart
               <ShoppingCartIcon />
             </Typography>
 
