@@ -1,6 +1,6 @@
 import './Billing.css';
 import { useState, useEffect } from "react";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { doc, addDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../../FirebaseConfig";
 
 import { Grid, Typography, Container, TextField, Autocomplete, Dialog, IconButton, RadioGroup, Radio } from '@mui/material';
@@ -91,12 +91,6 @@ function Billing() {
 
   const checkCurQuantityIsValid = (qty) => {
 
-    if (isNaN(Number(qty))) {
-      setCurQuantityIsValid(false);
-      setCurQuantityErrMessage("Quantity must be a valid number");
-      return;
-    }
-
     if (Number(qty) <= 0 || !Number.isInteger(Number(qty))) {
       setCurQuantityIsValid(false);
       setCurQuantityErrMessage("Quantity must be a positive whole number");
@@ -175,6 +169,14 @@ function Billing() {
       setBillDialog(true);
     })
 
+    //update the quantity of the products in inventory
+    cart.forEach(item => {
+      const idx = inventory.findIndex(product => product.id === item.id);
+      const newQuantity = inventory[idx].quantity - item.quantity;
+      const Ref = doc(collectionRefInventory, item.id);
+      updateDoc(Ref, { quantity: newQuantity });
+    });
+
   }
 
   const onDownload = () => {
@@ -238,7 +240,7 @@ function Billing() {
             <Typography
               color="red"
             >
-              Customer Name Cannot be empty
+              Customer Name cannot be empty.
             </Typography>
           }
         </Grid>
@@ -294,7 +296,10 @@ function Billing() {
           }
         </Grid>
         <Grid item xs={12}>
+          
           {curProduct.name != "" &&
+          <>
+          <Box margin="1%">
             <div display="flex" alignitems="center">
               <Typography
                 margin="1%"
@@ -302,9 +307,15 @@ function Billing() {
                 Enter Quantity:
               </Typography>
               <TextField
+                type="number"
                 error={curQuantityIsTouched && !curQuantityIsValid}
                 value={curQuantity}
                 onChange={onChangeCurQuantity}
+                //size
+                sx={{
+                  width: "10%"
+                }}
+
               >
               </TextField>
               {curQuantityIsTouched && !curQuantityIsValid && (
@@ -312,19 +323,22 @@ function Billing() {
                   <Typography color="red" variant="body1">
                     {curQuantityErrMessage}
                   </Typography>
-                  <Typography>
+                  {/* <Typography>
                     Current Available Quantity: {curProduct.quantity}
-                  </Typography>
+                  </Typography> */}
                 </div>
               )}
+                </div>
+              </Box>
+              <Box margin="1%">
               <Button
                 variant="contained"
                 onClick={onAddToCart}
               >
                 Add to Cart
               </Button>
-            </div>
-          }
+              </Box>
+          </>}
         </Grid>
         <Grid item xs={12}>
           <div>

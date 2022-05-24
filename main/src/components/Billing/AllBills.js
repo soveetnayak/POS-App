@@ -122,7 +122,7 @@ function AllBills () {
                                         </TableCell>
                                         <TableCell>{product.name}</TableCell>
                                         <TableCell>{product.quantity}</TableCell>
-                                        <TableCell>{product.name}</TableCell>
+                                        <TableCell>{product.price}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
