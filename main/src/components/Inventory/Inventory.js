@@ -9,16 +9,19 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Container, TextField } from "@mui/material";
+import { Container, TextField, Button } from "@mui/material";
 import { Box } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import Fuse from "fuse.js";
+import EditDialog from "./EditProduct";
 
 function Inventory() {
 
     const [searchText, setSearchText] = useState('');
     const [inventory, setInventory] = useState([]);
     const [searchResult, setSearchResult] = useState([]);
+    const [editModal, setEditModal] = useState(false);
+    const [curItem, setCurItem] = useState({});
     const collectionRef = collection(db, "Inventory");
 
     useEffect(() => {
@@ -51,6 +54,11 @@ function Inventory() {
             setSearchResult(inventory);
         }
 
+    }
+
+    const handleEdit = (item) => {
+        setCurItem(item);
+        setEditModal(true);
     }
 
     //return a table with the inventory
@@ -95,11 +103,20 @@ function Inventory() {
                                     <TableCell>
                                         <img src={item.image} alt="product" width="100" height="100" />
                                     </TableCell>
+                                    <TableCell>
+                                        <Button 
+                                            variant="contained"
+                                            onClick={() => {handleEdit(item)}}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </TableContainer>
+                <EditDialog key={curItem.id} open={editModal} item={curItem} />
             </Container>
         </div>
     );

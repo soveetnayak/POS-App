@@ -37,6 +37,7 @@ import PublishIcon from "@mui/icons-material/Publish";
 import { useState } from "react";
 
 import CropEasy from "./CropEasy";
+import {Categories} from "../../common/category"
 
 const AddProduct = () => {
   const collectionRef = collection(db, "Inventory");
@@ -72,16 +73,6 @@ const AddProduct = () => {
 
   const [modal, setModal] = useState(false);
   const [similarItems, setSimilarItems] = useState([]);
-
-  const Categories = [
-    "Electronics",
-    "Fashion",
-    "Furniture",
-    "Daily Use",
-    "Medicines",
-    "Snacks",
-    "Home Decor",
-  ];
 
   const checkProductNameIsValid = (name) => {
     if (name.trim() === "") {
