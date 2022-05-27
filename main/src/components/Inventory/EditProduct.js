@@ -125,6 +125,7 @@ function EditDialog(props) {
             })
               .then(() => {
                 alert("Product Updated Successfully");
+                window.location.reload();
               })
               .catch((err) => {
                 alert("Could not edit Product");
@@ -146,6 +147,7 @@ function EditDialog(props) {
           })
             .then(() => {
               alert("Product Updated Successfully");
+              window.location.reload();
             })
             .catch((err) => {
               alert("Could not edit Product");
